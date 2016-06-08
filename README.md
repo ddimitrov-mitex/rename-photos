@@ -1,5 +1,5 @@
 # rename-photos
-Renames all JPEG photos in a directory so their names start with date and time, followed by the original names
+Renames all JPEG photos in a directory so their names start with EXIF date and time, followed by the original names.
 
 Requires ImageMagick to be installed.
 
