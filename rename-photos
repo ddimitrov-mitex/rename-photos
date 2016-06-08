@@ -1,0 +1,46 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo Photo renaming script by Mitex. Version 1.0 '(2016)'
+	echo Renames all JPEG photos in a directory so their names start with date and time, followed by the original names. Uses ImageMagick.
+	echo
+	echo Usage: "${0##*/}" [-nokeep] 'file(s)'
+	echo -e "  -nokeep\t do not keep original filenames"
+	echo
+	echo The following example will rename all images such as IMG_1234.JPG, DSC12345.JPG, etc. to 'YYYYMMDD_HHMMSS_????????.jpg':
+	echo "${0##*/}" '????????.JPG'
+	echo
+	echo If camera time is not correct, you can use 'jhead -ta-0:00:23 *.jpg' to adjust time back by 23 seconds.
+	exit 0
+fi
+
+if [ "$1" = "-nokeep" ]; then
+	format="%[EXIF:DateTime].jpg"
+	shift
+else
+	format="%[EXIF:DateTime]_%[base].jpg"	# or %e for extension? why?
+fi
+
+for file in "$@"; do
+	exifdate=`identify -format "%[EXIF:DateTime]" "$file"`
+	if [ $? -eq 0 ]; then
+		if [ -z "$exifdate" ]; then
+			echo $file: no EXIF date
+		else
+			newname=`dirname "$file"`/`identify -format "$format" "$file" | sed s/://g | sed "s/ /_/g"`
+
+			if [ "$file" != "$newname" ]; then	# this should skip files already in the destination format? No, there is a difference of approx. 1 second
+				mv "$file" "$newname"
+				echo "$file" -\> "$newname"
+			fi
+		fi
+	else
+		echo Error	# wildcard was used but no files match it
+	fi
+done
+
+# Useful stuff:
+# jhead -ft	# set file time to exif time
+# jhead -nf%Y%m%d_%H%M%S *.jpg	# but lose the original name
+# jhead -ta-0:00:23 *.jpg	#adjust time back by 23 seconds
+
